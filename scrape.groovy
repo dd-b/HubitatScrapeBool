@@ -28,7 +28,7 @@
 // You can see change history there, I'm not going to try to keep it updated
 // in the file also.
 
-static String version()	{  return '0.1.196'  }
+static String version()	{  return '0.1.197'  }
 
 metadata {
     definition (
@@ -131,11 +131,11 @@ void pollUrl() {
 
 // Called when the async poll of the scraping URL completes.
 def procUrl (response, data) {
-    if (debugOn) log.debug "Poll result ${response.status} returned data ${response.data}";
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"
 	return
     }
+    if (debugOn) log.debug "Poll result ${response.status} returned data ${response.data}";
     if (response.data =~ testRegexp) {
 	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on")
 	log.info "Switch set on";

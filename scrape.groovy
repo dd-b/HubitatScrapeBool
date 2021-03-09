@@ -24,7 +24,7 @@
 	SOFTWARE.
 */
 
-static String version()	{  return '0.1.192'  }
+static String version()	{  return '0.1.193'  }
 
 metadata {
     definition (
@@ -105,9 +105,9 @@ void pollUrl() {
     log.debug "Polling ${scrapeUrl} 30";
     if (scrapeUrl) {
 	def params = [
-            uri: 		scrapeUrl,
-	    timeout:	30
-            // body: ''
+            uri: 	scrapeUrl,
+	    timeout:	30,
+	    contentType: 'text/html', 
 	]
 	asynchttpGet(procUrl, params)
     } else {
@@ -117,12 +117,12 @@ void pollUrl() {
 
 // Called when the async poll of the scraping URL completes.
 def procUrl (response, data) {
-    log.debug "Poll result ${response.status} returned data ${data}";
+    log.debug "Poll result ${response.status} returned data ${response.getData}";
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"
 	return
     }
-    if (data =~ /snow-emergency: yes/) {
+    if (response.getData =~ /snow-emergency: yes/) {
 	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on")
 	log.info "Switch set on";
     } else {

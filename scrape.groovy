@@ -24,7 +24,7 @@
 	SOFTWARE.
 */
 
-static String version()	{  return '0.1.193'  }
+static String version()	{  return '0.1.194'  }
 
 metadata {
     definition (

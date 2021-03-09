@@ -2,6 +2,9 @@
 
 "Scraping switch" for Hubitat Elevation
 
+Project state: New, incomplete! This is not anywhere near a polished
+finished tool.
+
 This device driver manages a virtual switch whose state is controlled
 by polling a specified URL and seeing if a regexp matches the page
 returned.  If it matches, the switch is set to on, otherwise the

@@ -28,7 +28,7 @@
 // You can see change history there, I'm not going to try to keep it updated
 // in the file also.
 
-static String version()	{  return '0.1.195'  }
+static String version()	{  return '0.1.196'  }
 
 metadata {
     definition (
@@ -49,7 +49,7 @@ metadata {
 	       defaultValue: "http://example.com/API/snow-emergency/your-city.html",
 	       displayDuringSetup: true)
 	input (name: "pollSched", type: "string", title: "Polling schedule, crontab format",
-	       defaultValue: "47 16 4,6,8,12,14-19 * * *", // Change at least the seconds!
+	       defaultValue: "39 11 6,8,12,14-19 * * ?", // Change at least the seconds!
 	       displayDuringSetup: true)
 	input (name: "testRegexp", type: "string", title: "Regular expression to set switch on",
 	       defaultValue: "snow-emergency: yes",
@@ -70,13 +70,7 @@ def initialize () {
 
 // Called when the device settings are saved
 void updated() {
-    log.info '''Updated device settings:
-    Description logging is: ${txtEnable == true}
-    Scrape URL: ${scrapeUrl}
-    Polling schedule: ${pollSched}
-    Test regexp: ${testRegexp}
-    Debug logging: ${debugOn}
-'''
+    log.info "Updated device settings:\n    Description logging is: ${txtEnable == true}\n    Scrape URL: ${scrapeUrl}\n    Polling schedule: ${pollSched}\n    Test regexp: ${testRegexp}\n    Debug logging: ${debugOn}\n"
     initialize()
 }
 

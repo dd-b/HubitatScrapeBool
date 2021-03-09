@@ -24,7 +24,7 @@
 	SOFTWARE.
 */
 
-static String version()	{  return '0.1.188'  }
+static String version()	{  return '0.1.190'  }
 
 metadata {
     definition (
@@ -41,8 +41,9 @@ metadata {
     preferences {
         input (name: "txtEnable", type: "bool", title: "Enable descriptionText logging",
 	       displayDuringSetup: true, defaultValue: true)
-	input (name: "scrapeURL", type: "string", title: "URL to scrape",
+	input (name: "scrapeUrl", type: "string", title: "URL to scrape",
 	       displayDuringSetup: true)
+// ZZDO Put conditionals around debug log statement using this
 	input (name: 'debugOn', type: 'bool', title: 'Enable debug logging?',
 	       displayDuringSetup: true, defaultValue: true)
     }
@@ -53,7 +54,7 @@ metadata {
 // don't check at all frequently when snow emergency already in effect?
 def initialize () {
     log.debug "Starting polling";
-    runEvery1Minute ('pollURL'); // Note singular vs. plural!
+    runEvery1Minute (pollUrl); // Note singular vs. plural!
 }
 
 void updated() {
@@ -99,18 +100,19 @@ void refresh() {
 }
 
 // Start asynch poll of our scraping URL.
-void pollURL() {
-    log.debug "Polling $scrapeUrl 30";
+// ZZDO avoid error when scrapeUrl not configured
+void pollUrl() {
+    log.debug "Polling ${scrapeUrl} 30";
     def params = [
         uri: 		scrapeUrl,
 	timeout:	30
         // body: ''
     ]
-    asynchttpGet(procURL, params)
+    asynchttpGet(procUrl, params)
 }
 
 // Called when the async poll of the scraping URL completes.
-def procURL (response, data) {
+def procUrl (response, data) {
     log.debug "Poll result returned data ${data}";
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"

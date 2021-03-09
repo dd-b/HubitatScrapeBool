@@ -117,12 +117,12 @@ void pollUrl() {
 
 // Called when the async poll of the scraping URL completes.
 def procUrl (response, data) {
-    log.debug "Poll result ${response.status} returned data ${response.getData}";
+    log.debug "Poll result ${response.status} returned data ${response.data}";
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"
 	return
     }
-    if (response.getData =~ /snow-emergency: yes/) {
+    if (response.data =~ /snow-emergency: yes/) {
 	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on")
 	log.info "Switch set on";
     } else {

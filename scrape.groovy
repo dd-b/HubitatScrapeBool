@@ -24,7 +24,7 @@
 	SOFTWARE.
 */
 
-static String version()	{  return '0.1.190'  }
+static String version()	{  return '0.1.192'  }
 
 metadata {
     definition (
@@ -54,6 +54,7 @@ metadata {
 // don't check at all frequently when snow emergency already in effect?
 def initialize () {
     log.debug "Starting polling";
+    unschedule();		//Get rid of any existing schedule items
     runEvery1Minute (pollUrl); // Note singular vs. plural!
 }
 
@@ -100,25 +101,28 @@ void refresh() {
 }
 
 // Start asynch poll of our scraping URL.
-// ZZDO avoid error when scrapeUrl not configured
 void pollUrl() {
     log.debug "Polling ${scrapeUrl} 30";
-    def params = [
-        uri: 		scrapeUrl,
-	timeout:	30
-        // body: ''
-    ]
-    asynchttpGet(procUrl, params)
+    if (scrapeUrl) {
+	def params = [
+            uri: 		scrapeUrl,
+	    timeout:	30
+            // body: ''
+	]
+	asynchttpGet(procUrl, params)
+    } else {
+	log.warn "URL to scrape not configured";
+    }
 }
 
 // Called when the async poll of the scraping URL completes.
 def procUrl (response, data) {
-    log.debug "Poll result returned data ${data}";
+    log.debug "Poll result ${response.status} returned data ${data}";
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"
 	return
     }
-    if (data =~ /snow emergency/) {
+    if (data =~ /snow-emergency: yes/) {
 	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on")
 	log.info "Switch set on";
     } else {

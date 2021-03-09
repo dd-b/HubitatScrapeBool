@@ -24,14 +24,14 @@
 	SOFTWARE.
 */
 
-static String version()	{  return '0.1.187'  }
+static String version()	{  return '0.1.188'  }
 
 metadata {
     definition (
 	name: "Scraping Switch",
 	namespace: "dd-b",
 	author: "David Dyer-Bennet",
-	importUrl: "https://github.com/dd-b/HubitatScrapeBool/blob/main/scrape.groovy",
+	importUrl: "https://raw.githubusercontent.com/dd-b/HubitatScrapeBool/main/scrape.groovy",
 	component: true
     ) {
         capability "Switch"	// on() and off()
@@ -40,8 +40,9 @@ metadata {
     }
     preferences {
         input (name: "txtEnable", type: "bool", title: "Enable descriptionText logging",
-	       defaultValue: true)
-	input (name: "scrapeURL", type: "string", title: "URL to scrape")
+	       displayDuringSetup: true, defaultValue: true)
+	input (name: "scrapeURL", type: "string", title: "URL to scrape",
+	       displayDuringSetup: true)
 	input (name: 'debugOn', type: 'bool', title: 'Enable debug logging?',
 	       displayDuringSetup: true, defaultValue: true)
     }

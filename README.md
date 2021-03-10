@@ -6,9 +6,13 @@ Project state: New, incomplete! This is not anywhere near a polished
 finished tool.
 
 This device driver manages a virtual switch whose state is controlled
-by polling a specified URL and seeing if a regexp matches the page
-returned.  If it matches, the switch is set to on, otherwise the
-switch is set to off.
+by polling a specified URL and checking the data returned against an
+"on regexp" and an "off regexp". If it matches one, the switch is set
+to that state. If it fails to match and only one regexp was provided,
+then the switch state is set to the opposite of the regexp it failed
+to match. So, you can either specify precise "on" and "off"
+conditions, or else you can specify just one and anything not matching
+that gets set to the opposite state. 
 
 Screen-scraping, which is what that is, is a terrible idea. Attempting
 to parse modern web screens intended for humans well enough to get

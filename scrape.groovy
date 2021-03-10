@@ -28,7 +28,7 @@
 // You can see change history there, I'm not going to try to keep it updated
 // in the file also.
 
-static String version()	{  return '0.1.200'  }
+static String version()	{  return '0.1.204'  }
 
 metadata {
     definition (
@@ -40,22 +40,21 @@ metadata {
     ) {
         capability "Switch"	// on() and off()
         capability "Refresh"	// refresh()
-        capability "Actuator"	// has no commands, copied from example
+        capability "Actuator"	// means it has commands
     }
     preferences {
         input (name: "txtEnable", type: "bool", title: "Enable descriptionText logging",
 	       displayDuringSetup: true, defaultValue: true)
 	input (name: "scrapeUrl", type: "string", title: "URL to scrape",
 	       defaultValue: "http://example.com/API/snow-emergency/your-city.html",
-	       displayDuringSetup: true)
+	       displayDuringSetup: true, required: true)
 	input (name: "pollSched", type: "string", title: "Polling schedule, crontab format",
 	       defaultValue: "39 11 6,8,12,14-19 * * ?", // Change at least the seconds!
-	       displayDuringSetup: true)
+	       displayDuringSetup: true, required: true)
 	input (name: "onRegexp", type: "string", title: "Regular expression to set switch on",
-	       defaultValue: "(?i)snow-emergency: yes",
-	       displayDuringSetup: true)
+	       displayDuringSetup: true, required: false)
 	input (name: "offRegexp", type: "string", title: "Regular expression to set switch off",
-	       displayDuringSetup: true)
+	       displayDuringSetup: true, required: false)
 	input (name: 'debugOn', type: 'bool', title: 'Enable debug logging?',
 	       displayDuringSetup: true, defaultValue: true)
     }
@@ -66,7 +65,6 @@ metadata {
 // don't check at all frequently when snow emergency already in effect?
 def initialize () {
     unschedule();		//Get rid of any existing schedule items
-    log.info "Starting polling";
     schedule (pollSched, pollUrl);
 }
 
@@ -135,25 +133,27 @@ void pollUrl() {
 }
 
 // Called when the async poll of the scraping URL completes.
+// Both regexps present and failling gives a warning and sets the switch off.
+// Both regexps present and matching gives a warning and sets the switch off.
+// If only one regexp matches then the switch is set to that state.
+// If no regexps are defined we set the switch off and issue a warning.
 def procUrl (response, data) {
     if (response.hasError()) {
         log.warn "response received error: ${response.getErrorMessage()}"
 	return
     }
-    if (debugOn) log.debug "Poll result ${response.status} returned data ${response.data}";
-    // ZZQ this doesn't check for *both* matching, which seems to be also an error
-    if (onRegexp && response.data =~ onRegexp) {
-	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on by match")
-	log.info "Switch set on";
-    } else if (offRegexp && response.data =~ offRegexp) {
-	sendEvent(name: 'off', value: 0, descriptionText: "Switch set off by match")
-	log.info "Switch set off";
+    if (debugOn) log.debug "Poll result ${response.status} returned data\n${response.data}";
+    def onMatch = onRegexp && response.data =~ onRegexp
+    def offMatch = offRegexp && response.data =~ offRegexp
+    def chosen = 'off'
+    if (debugOn) log.debug "onMatch ${onMatch} offMatch ${offMatch}"
+    if (! onRegexp && ! offRegexp) {
+	log.warn "No regexps configured"
+    } else if (onMatch == offMatch) {
+	log.warn "Both regexps " + onMatch? "matched" : "failed"
     } else {
-	// No match. If both given, one must match.
-	if (onRegexp && offRegexp) log.warn "Neither onRegexp nor offRegexp matches";
-	// Default to the one not specified, or off
-	def chosen
-	if (offRegexp && ! onRegexp) { chosen = 'on' } else { chosen = 'off' }
-	sendEvent (name: chosen, value: 0, descriptionText: "Switch set ${chosen}")
+	if (onMatch) chosen = 'on'
     }
+    sendEvent (name: chosen, value: 0, descriptionText: "Switch set to ${chosen}")
+    log.info "Switch set to ${chosen}"
 }

@@ -28,7 +28,7 @@
 // You can see change history there, I'm not going to try to keep it updated
 // in the file also.
 
-static String version()	{  return '0.1.204'  }
+static String version()	{  return '0.1.205'  }
 
 metadata {
     definition (
@@ -65,6 +65,7 @@ metadata {
 // don't check at all frequently when snow emergency already in effect?
 def initialize () {
     unschedule();		//Get rid of any existing schedule items
+    sendEvent (name: 'off', value: 0, descriptionText: "Switch initialized to off")
     schedule (pollSched, pollUrl);
 }
 

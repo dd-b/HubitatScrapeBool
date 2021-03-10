@@ -28,7 +28,7 @@
 // You can see change history there, I'm not going to try to keep it updated
 // in the file also.
 
-static String version()	{  return '0.1.197'  }
+static String version()	{  return '0.1.200'  }
 
 metadata {
     definition (
@@ -51,8 +51,10 @@ metadata {
 	input (name: "pollSched", type: "string", title: "Polling schedule, crontab format",
 	       defaultValue: "39 11 6,8,12,14-19 * * ?", // Change at least the seconds!
 	       displayDuringSetup: true)
-	input (name: "testRegexp", type: "string", title: "Regular expression to set switch on",
-	       defaultValue: "snow-emergency: yes",
+	input (name: "onRegexp", type: "string", title: "Regular expression to set switch on",
+	       defaultValue: "(?i)snow-emergency: yes",
+	       displayDuringSetup: true)
+	input (name: "offRegexp", type: "string", title: "Regular expression to set switch off",
 	       displayDuringSetup: true)
 	input (name: 'debugOn', type: 'bool', title: 'Enable debug logging?',
 	       displayDuringSetup: true, defaultValue: true)
@@ -70,7 +72,10 @@ def initialize () {
 
 // Called when the device settings are saved
 void updated() {
-    log.info "Updated device settings:\n    Description logging is: ${txtEnable == true}\n    Scrape URL: ${scrapeUrl}\n    Polling schedule: ${pollSched}\n    Test regexp: ${testRegexp}\n    Debug logging: ${debugOn}\n"
+    log.info "Updated device settings:\n    Description logging is: ${txtEnable == true}\n    Scrape URL: ${scrapeUrl}\n    Polling schedule: ${pollSched}\n    On regexp: ${onRegexp}\n    Off regexp: ${offRegexp}\n    Debug logging: ${debugOn}\n"
+    if (! scrapeUrl) log.warn "scrapeUrl is required"
+    if (! ( onRegexp || offRegexp )) log.warn "At least one of onRegexp and offRegexp are required"
+    if (! pollSched) log.warn "pollSched is required"
     initialize()
 }
 
@@ -121,7 +126,7 @@ void pollUrl() {
 	def params = [
             uri: 	scrapeUrl,
 	    timeout:	30,
-	    contentType: 'text/html', 
+	    contentType: 'text/plain', 
 	]
 	asynchttpGet(procUrl, params)
     } else {
@@ -136,11 +141,19 @@ def procUrl (response, data) {
 	return
     }
     if (debugOn) log.debug "Poll result ${response.status} returned data ${response.data}";
-    if (response.data =~ testRegexp) {
-	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on")
+    // ZZQ this doesn't check for *both* matching, which seems to be also an error
+    if (onRegexp && response.data =~ onRegexp) {
+	sendEvent(name: 'on', value: 0, descriptionText: "Switch set on by match")
 	log.info "Switch set on";
-    } else {
-	sendEvent(name: 'off', value: 0, descriptionText: "Switch set off")
+    } else if (offRegexp && response.data =~ offRegexp) {
+	sendEvent(name: 'off', value: 0, descriptionText: "Switch set off by match")
 	log.info "Switch set off";
+    } else {
+	// No match. If both given, one must match.
+	if (onRegexp && offRegexp) log.warn "Neither onRegexp nor offRegexp matches";
+	// Default to the one not specified, or off
+	def chosen
+	if (offRegexp && ! onRegexp) { chosen = 'on' } else { chosen = 'off' }
+	sendEvent (name: chosen, value: 0, descriptionText: "Switch set ${chosen}")
     }
 }
